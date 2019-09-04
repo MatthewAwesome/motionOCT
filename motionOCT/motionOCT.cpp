@@ -2,18 +2,30 @@
 //
 
 #include "stdafx.h"
+#include "FrameQueue.cpp"
 #include <fftw3.h>
-#include <iostream>
+#include <thread>
 
-extern "C" __declspec(dllexport) int sum(int a, int b) {
-	return a + b;
-}
+class FramePreprocessor
+{
+	public:
+
+
+	FramePreprocessor()
+	{
+
+	}
+
+	void enqueueFrame(UINT16 * frame)
+	{
+		frameQueue_.push(frame);
+	}
+
+	private:
+		FrameQueue frameQueue_;
+};
 
 extern "C" __declspec(dllexport) void rfft(fftwf_complex * in, fftwf_complex * out) {
-
-	for (int i = 0; i < 2048; i++) {
-		std::cout << in[i][0] << ", " << in[i][1] << std::endl;
-	}
 
 	fftwf_plan p = fftwf_plan_dft_1d(2048, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
 
@@ -21,10 +33,10 @@ extern "C" __declspec(dllexport) void rfft(fftwf_complex * in, fftwf_complex * o
 
 	fftwf_destroy_plan(p);
 
+	// Normalization
 	for (int i = 0; i < 2048; i++) {
 		out[i][0] *= 1./2048;
 		out[i][1] *= 1./2048;
-		std::cout << out[i][0] << ", " << out[i][1] << std::endl;
 	}
 
 }

@@ -7,16 +7,10 @@ lib = c.CDLL('motionOCT')
 
 print(lib)
 
-lib.sum.argtypes = [c.c_int, c.c_int]
-lib.sum.restype = c.c_int
-
-print('2 + 2 =',lib.sum(2,2))
-
 in_arr = np.zeros(2048,dtype=np.complex64)
 in_arr[400:2048-400] = 2
 
 out_arr = np.empty(2048,dtype=np.complex64)
-
 out_npy = np.fft.ifft(in_arr)
 
 plt.figure(1)
