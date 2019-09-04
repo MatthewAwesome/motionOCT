@@ -1,3 +1,6 @@
+#ifndef FRAME_QUEUE_H
+#define FRAME_QUEUE_H
+
 #include <mutex>
 #include <condition_variable>
 #include <queue>
@@ -33,3 +36,5 @@ class FrameQueue
 
 
 };
+
+#endif
