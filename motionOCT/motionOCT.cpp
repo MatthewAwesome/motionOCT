@@ -1,53 +1,29 @@
 // motionOCT.cpp : Defines the exported functions for the DLL application.
-//
-
 #include "stdafx.h"
-#include "FrameQueue.h"
-#include "ThreadPool.h"
-#include <fftw3.h>
-#include <thread>
+//#include "FrameQueue.h"
+//#include "ThreadPool.h"
+#include "FrameProcessor.h"
+//#include <fftw3.h>
+//#include <thread>
+//#include <iostream>
 
-class FramePreprocessor
+extern "C" 
 {
-	public:
-
-	FramePreprocessor()
+	
+	__declspec(dllexport) FramePreprocessor*  initPreprocessor(int a_per_b, int a_per_scan, bool * b_index_1, bool * b_index_2, float * apodization_window)
 	{
-		ThreadPool threadPool_ = ThreadPool(4);
-		// Dummy arrays for declaration of plan-- plan is called via new-array execution functions
-		fftwf_complex in[2048], out[2048];
-		fftwf_plan fft_plan_ = fftwf_plan_dft_1d(2048, in, out, FFTW_BACKWARD, FFTW_PATIENT);
+		return new FramePreprocessor(a_per_b, a_per_scan, b_index_1, b_index_2, apodization_window);
 	}
 
-	// TODO implement other constructors
-
-	void enqueueFrame(uint16_t * frame)
+	__declspec(dllexport) void preprocessFrame(FramePreprocessor* preprocessor, uint16_t * in, fftwf_complex * out)
 	{
-		frameQueue_.push(frame);
+		preprocessor->preprocessFrame(in, out);
 	}
 
-	private:
-		FrameQueue frameQueue_;
-
-};
-
-void preprocessFrame(uint16_t * frame, int N)
-{
+	__declspec(dllexport) void delPreprocessor(FramePreprocessor* preprocessor)
+	{
+		delete preprocessor;
+	}
 
 }
 
-extern "C" __declspec(dllexport) void rfft(fftwf_complex * in, fftwf_complex * out) {
-
-	fftwf_plan p = fftwf_plan_dft_1d(2048, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
-
-	fftwf_execute(p);
-
-	fftwf_destroy_plan(p);
-
-	// Normalization
-	for (int i = 0; i < 2048; i++) {
-		out[i][0] *= 1./2048;
-		out[i][1] *= 1./2048;
-	}
-
-}
