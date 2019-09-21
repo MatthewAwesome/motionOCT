@@ -7,6 +7,7 @@
 //#include <thread>
 //#include <iostream>
 
+// C++ functions must be wrapped with C interfaces to be accessible via ctypes.
 extern "C" 
 {
 	
