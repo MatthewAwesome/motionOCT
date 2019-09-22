@@ -30,6 +30,7 @@ window = np.ones(2048,dtype=np.float32)
 bool_p = ndpointer(dtype=np.bool,ndim=1,flags='C_CONTIGUOUS')
 uint16_p = ndpointer(dtype=np.uint16,ndim=1,flags='C_CONTIGUOUS')
 float_p = ndpointer(dtype=np.float32,ndim=1,flags='C_CONTIGUOUS')
+double_p = ndpointer(dtype=np.float64,ndim=1,flags='C_CONTIGUOUS')
 fftw_complex_p = ndpointer(dtype=np.complex64,ndim=1,flags='C_CONTIGUOUS')
 
 class FramePreprocessor(c.Structure):
@@ -37,7 +38,7 @@ class FramePreprocessor(c.Structure):
 
 FramePreprocessorHandle = c.POINTER(FramePreprocessor)
 
-lib.initPreprocessor.argtypes = [c.c_int, c.c_int, bool_p, bool_p, float_p]
+lib.initPreprocessor.argtypes = [c.c_int, c.c_int, bool_p, bool_p, float_p, double_p]
 lib.initPreprocessor.restype = FramePreprocessorHandle
 
 lib.preprocessFrame.argtypes = [FramePreprocessorHandle, uint16_p, fftw_complex_p]
@@ -49,7 +50,9 @@ print('Doing some processing!')
 
 out = np.empty(2*1024*x,dtype=np.complex64)
 
-processor = lib.initPreprocessor(x,n,B1,B2,window)
+lam = np.load('lam.npy').astype(np.float64)
+
+processor = lib.initPreprocessor(x,n,B1,B2,window,lam)
 print('Processor initiated')
 
 number_of_frames = 1000
@@ -64,9 +67,19 @@ for i in range(number_of_frames):
 
 print(str(np.mean(times)*1000)[0:5],'ms',str(1/(np.mean(times)))[0:5],'hz averaged over',number_of_frames,'frames')
 
-plt.title('10 A-scan B-line output')
-plt.plot(np.abs(np.real(outs[10])))
-plt.show()
-
 lib.delPreprocessor(processor)
 print('Processor deleted')
+
+plt.figure(1)
+plt.title('2 * 10 A-scan B-scan output (real dB)')
+plt.plot(np.real(outs[0]))
+
+image = np.empty([2048,10],dtype=np.complex64)
+for i in range(10):
+    image[:,i] = outs[0][2048*i:2048*i+2048]
+
+plt.figure(2)
+plt.title('B-scan (dB)')
+plt.imshow(20*np.log10(np.abs(np.real(image[0:120,:]))),aspect=0.6)
+
+plt.show()
